@@ -1,0 +1,69 @@
+service: serverless-flask
+
+plugins:
+  - serverless-python-requirements
+  - serverless-wsgi
+
+custom:
+  tableName: 'sms-table-${self:provider.stage}'
+  wsgi:
+    app: app.app
+    packRequirements: false
+  pythonRequirements:
+    dockerizePip: non-linux
+
+provider:
+  name: aws
+  runtime: python3.7
+  stage: dev
+  region: eu-west-1
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource:
+        - { "Fn::GetAtt": ["SMSDynamoDBTable", "Arn" ] }
+  environment:
+    SMS_TABLE: ${self:custom.tableName}
+
+functions:
+  app:
+    handler: wsgi_handler.handler
+    events:
+      - http: ANY /
+      - http: 'ANY {proxy+}'
+  getSMS:
+    handler: wsgi_handler.handler
+    events:
+      - http: 'GET /sms/{proxy+}'
+  getSMSBySender:
+    handler: wsgi_handler.handler
+    events:
+      - http: 'GET /sms/sender/{proxy+}'
+  postSMS:
+    handler: wsgi_handler.handler
+    events:
+      - http: 'POST /sms'
+
+resources:
+  Resources:
+    SMSDynamoDBTable:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: messageId
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: messageId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:custom.tableName}
