@@ -1,15 +1,17 @@
 from flask import Flask, jsonify, request
 from repositories import AWSSmsRepository as SMSRepo
-
+from utils import check_token
 app = Flask(__name__)
 
 
 @app.route("/")
+@check_token
 def hello():
     return "Mundiagua SMS Service"
 
 
 @app.route("/sms/sender/<string:msisdn>")
+@check_token
 def get_sms_by_sender(msisdn):
     repository = SMSRepo()
     scan_data = repository.get_sms_by_sender(msisdn)
@@ -25,6 +27,7 @@ def get_sms_by_sender(msisdn):
 
 
 @app.route("/sms/<string:sms_id>")
+@check_token
 def get_sms(sms_id):
     repository = SMSRepo()
     item = repository.get_sms_by_id(sms_id)
