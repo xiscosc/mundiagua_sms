@@ -1,8 +1,9 @@
 import abc
 import os
 import boto3
-from boto3.dynamodb.conditions import Key
+from boto3.dynamodb.conditions import Attr, Key
 from botocore.exceptions import ClientError
+from utils import get_timestamp, verify_password, generate_token
 
 
 class SmsRepository(abc.ABC):
@@ -26,6 +27,10 @@ class UserRepository(abc.ABC):
 
     @abc.abstractmethod
     def check_token(self, token):
+        pass
+
+    @abc.abstractmethod
+    def generate_token(self, username, password):
         pass
 
 
@@ -79,10 +84,38 @@ class AWSUserRepository(UserRepository):
         if not token:
             return None
         try:
-            data = self.table.scan(FilterExpression=Key('token').eq(token))
+            data = self.table.scan(FilterExpression=Attr('auth_token').eq(token) and Attr('timestamp').gt(get_timestamp(0)))
             if int(data['Count']) == 1:
                 return data['Items'][0]['username']
         except ClientError as e:
             print(e.response['Error']['Message'])
+        except Exception as e:
+            print(e)
 
         return None
+
+    def generate_token(self, username, password):
+        user = self.get_user_by_username(username)
+        if user is None:
+            return None
+
+        if not verify_password(user['password'], password):
+            return None
+
+        token = generate_token()
+        timestamp = get_timestamp(int(os.environ['TOKEN_ALIVE_H']))
+        try:
+            response = self.table.update_item(
+                Key={'username': username},
+                UpdateExpression="set auth_token = :t, ts=:times",
+                ExpressionAttributeValues={
+                    ':t': token,
+                    ':times': timestamp,
+                },
+                ReturnValues="UPDATED_NEW"
+            )
+
+            return token, timestamp
+        except ClientError as e:
+            print(e.response['Error']['Message'])
+            return None

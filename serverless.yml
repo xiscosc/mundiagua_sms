@@ -17,6 +17,7 @@ provider:
   name: aws
   runtime: python3.7
   stage: dev
+  memorySize: 256
   region: eu-west-1
   iamRoleStatements:
     - Effect: Allow
@@ -32,6 +33,7 @@ provider:
   environment:
     SMS_TABLE: ${self:custom.smsTableName}
     USERS_TABLE: ${self:custom.usersTableName}
+    TOKEN_ALIVE_H: 6
 
 functions:
   app:
@@ -51,6 +53,10 @@ functions:
     handler: wsgi_handler.handler
     events:
       - http: 'POST /sms'
+  getToken:
+    handler: wsgi_handler.handler
+    events:
+      - http: 'POST /user_token'
 
 resources:
   Resources:

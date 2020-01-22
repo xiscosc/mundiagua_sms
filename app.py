@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request
-from repositories import AWSSmsRepository as SMSRepo
-from utils import check_token
+from repositories import AWSSmsRepository as SMSRepo, AWSUserRepository as UserRepo
+from decorators import check_token
 app = Flask(__name__)
 
 
@@ -53,4 +53,26 @@ def create_sms():
     return jsonify({
         'messageId': message_id,
         'msisdn': msisdn
+    })
+
+
+@app.route("/user_token", methods=["POST"])
+def get_user_token():
+    repository = UserRepo()
+    if not request.json:
+        return jsonify({'error': 'Invalid json format'}), 400
+
+    username = request.json.get('username')
+    password = request.json.get('password')
+
+    if not username or not password:
+        return jsonify({'error': 'Invalid json format'}), 400
+
+    token, timestamp = repository.generate_token(username, password)
+    if not token:
+        return jsonify({'error': 'Unauthorised'}), 401
+
+    return jsonify({
+        'token': token,
+        'timestamp': timestamp,
     })
