@@ -97,10 +97,10 @@ class AWSUserRepository(UserRepository):
     def generate_token(self, username, password):
         user = self.get_user_by_username(username)
         if user is None:
-            return None
+            return None, None
 
         if not verify_password(user['password'], password):
-            return None
+            return None, None
 
         token = generate_token()
         timestamp = get_timestamp(int(os.environ['TOKEN_ALIVE_H']))
@@ -118,4 +118,4 @@ class AWSUserRepository(UserRepository):
             return token, timestamp
         except ClientError as e:
             print(e.response['Error']['Message'])
-            return None
+            return None, None
