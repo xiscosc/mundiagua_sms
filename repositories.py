@@ -85,8 +85,10 @@ class AWSUserRepository(UserRepository):
         if not token:
             return None
         try:
-            data = self.table.scan(FilterExpression=Attr('auth_token').eq(token) and Attr('ts').gt(get_timestamp(0)))
+            data = self.table.scan(FilterExpression=Attr('auth_token').eq(token))
             if int(data['Count']) == 1:
+                if data['Items'][0]['ts'] < get_timestamp(0):
+                    return None
                 return data['Items'][0]['username']
         except ClientError as e:
             print(e.response['Error']['Message'])
