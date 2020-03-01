@@ -39,6 +39,7 @@ def get_sms_by_sender(msisdn):
     response = {
         'count': scan_data['Count'],
         'items': scan_data['Items'],
+        'phone': scan_data['Phone'],
     }
 
     return jsonify(response)

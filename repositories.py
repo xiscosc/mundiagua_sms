@@ -92,7 +92,7 @@ class AWSSmsRepository(SmsRepository):
             scan_data['Items'].sort(key=lambda x: x['ts'], reverse=True)
             phone_repo = AWSPhonesRepository()
             phone = phone_repo.get_name_by_phone(sender)
-            scan_data['phone'] = phone
+            scan_data['Phone'] = phone
             return scan_data
         except ClientError as e:
             print(e.response['Error']['Message'])
