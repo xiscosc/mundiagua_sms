@@ -77,16 +77,22 @@ class AWSSmsRepository(SmsRepository):
         try:
             resp = self.table.get_item(Key={'messageId': sms_id})
             if 'Item' in resp:
-                return resp['Item']
+                phone_number = resp['Item']['msisdn']
+                phone_repo = AWSPhonesRepository()
+                phone = phone_repo.get_name_by_phone(phone_number)
+                return resp['Item'], phone
         except ClientError as e:
             print(e.response['Error']['Message'])
 
-        return None
+        return None, None
 
     def get_sms_by_sender(self, sender):
         try:
             scan_data = self.table.scan(FilterExpression=Key('msisdn').eq(sender))
             scan_data['Items'].sort(key=lambda x: x['ts'], reverse=True)
+            phone_repo = AWSPhonesRepository()
+            phone = phone_repo.get_name_by_phone(sender)
+            scan_data['phone'] = phone
             return scan_data
         except ClientError as e:
             print(e.response['Error']['Message'])

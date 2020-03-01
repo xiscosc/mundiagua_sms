@@ -48,11 +48,12 @@ def get_sms_by_sender(msisdn):
 @check_token
 def get_sms(sms_id):
     repository = SMSRepo()
-    item = repository.get_sms_by_id(sms_id)
+    item, phone = repository.get_sms_by_id(sms_id)
     if not item:
         return jsonify({'error': 'SMS does not exist'}), 404
 
-    return jsonify(item)
+    response = {'sms': item, 'phone': phone}
+    return jsonify(response)
 
 
 @app.route("/sms", methods=["POST"])
