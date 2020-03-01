@@ -58,7 +58,7 @@ class AWSSmsRepository(SmsRepository):
 
     def save_sms(self, sms_dict):
         try:
-            sms_dict['timestamp'] = get_timestamp(0)
+            sms_dict['ts'] = get_timestamp(0)
             resp = self.table.put_item(Item=sms_dict)
             return True
         except ClientError as e:
@@ -85,7 +85,7 @@ class AWSUserRepository(UserRepository):
         if not token:
             return None
         try:
-            data = self.table.scan(FilterExpression=Attr('auth_token').eq(token) and Attr('timestamp').gt(get_timestamp(0)))
+            data = self.table.scan(FilterExpression=Attr('auth_token').eq(token) and Attr('ts').gt(get_timestamp(0)))
             if int(data['Count']) == 1:
                 return data['Items'][0]['username']
         except ClientError as e:

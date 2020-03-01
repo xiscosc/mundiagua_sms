@@ -3,6 +3,17 @@ import hashlib
 import binascii
 import os
 import secrets
+import decimal
+import flask.json
+
+
+class SMSJSONEncoder(flask.json.JSONEncoder):
+
+    def default(self, obj):
+        if isinstance(obj, decimal.Decimal):
+            # Convert decimal instances to strings.
+            return str(obj)
+        return super(SMSJSONEncoder, self).default(obj)
 
 
 def hash_password(password):

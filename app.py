@@ -1,7 +1,9 @@
 from flask import Flask, jsonify, request
 from repositories import AWSSmsRepository as SMSRepo, AWSUserRepository as UserRepo
 from decorators import check_token
+from utils import SMSJSONEncoder
 app = Flask(__name__)
+app.json_encoder = SMSJSONEncoder
 
 
 @app.route("/")
