@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request
-from repositories import AWSSmsRepository as SMSRepo, AWSUserRepository as UserRepo
+from repositories import AWSSmsRepository as SMSRepo, AWSUserRepository as UserRepo, AWSPhonesRepository as PhoneRepo
 from decorators import check_token
 from utils import SMSJSONEncoder
 app = Flask(__name__)
@@ -10,6 +10,22 @@ app.json_encoder = SMSJSONEncoder
 @check_token
 def hello():
     return "Mundiagua SMS Service"
+
+
+@app.route("/phones")
+@check_token
+def get_phones():
+    repository = PhoneRepo()
+    scan_data = repository.get_phones()
+    if not scan_data:
+        return jsonify({'error': 'Error getting Phones'}), 500
+
+    response = {
+        'count': scan_data['Count'],
+        'items': scan_data['Items'],
+    }
+
+    return jsonify(response)
 
 
 @app.route("/sms/sender/<string:msisdn>")

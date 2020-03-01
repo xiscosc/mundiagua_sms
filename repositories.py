@@ -34,6 +34,40 @@ class UserRepository(abc.ABC):
         pass
 
 
+class PhonesRepository(abc.ABC):
+    @abc.abstractmethod
+    def get_name_by_phone(self, phone):
+        pass
+
+    @abc.abstractmethod
+    def get_phones(self):
+        pass
+
+
+class AWSPhonesRepository(PhonesRepository):
+    def __init__(self):
+        self.client = boto3.resource('dynamodb', region_name='eu-west-1')
+        self.table = self.client.Table(os.environ['PHONES_TABLE'])
+
+    def get_name_by_phone(self, phone):
+        try:
+            resp = self.table.get_item(Key={'phone': phone})
+            if 'Item' in resp:
+                return resp['Item']
+        except ClientError as e:
+            print(e.response['Error']['Message'])
+
+        return None
+
+    def get_phones(self):
+        try:
+            scan_data = self.table.scan()
+            return scan_data
+        except ClientError as e:
+            print(e.response['Error']['Message'])
+            return None
+
+
 class AWSSmsRepository(SmsRepository):
     def __init__(self):
         self.client = boto3.resource('dynamodb', region_name='eu-west-1')
@@ -51,7 +85,9 @@ class AWSSmsRepository(SmsRepository):
 
     def get_sms_by_sender(self, sender):
         try:
-            return self.table.scan(FilterExpression=Key('msisdn').eq(sender))
+            scan_data = self.table.scan(FilterExpression=Key('msisdn').eq(sender))
+            scan_data['Items'].sort(key=lambda x: x['ts'], reverse=True)
+            return scan_data
         except ClientError as e:
             print(e.response['Error']['Message'])
             return None
