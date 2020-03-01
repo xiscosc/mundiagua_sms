@@ -58,6 +58,7 @@ class AWSSmsRepository(SmsRepository):
 
     def save_sms(self, sms_dict):
         try:
+            sms_dict['timestamp'] = get_timestamp(0)
             resp = self.table.put_item(Item=sms_dict)
             return True
         except ClientError as e:
