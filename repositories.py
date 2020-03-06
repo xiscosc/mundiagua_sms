@@ -12,11 +12,15 @@ class SmsRepository(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_sms_by_sender(self, sender):
+    def get_sms_by_sender(self, sender, limit=None, offset=None):
         pass
 
     @abc.abstractmethod
     def save_sms(self, sms_object):
+        pass
+
+    @abc.abstractmethod
+    def get_sms(self, limit=None, offset=None):
         pass
 
 
@@ -75,24 +79,56 @@ class AWSSmsRepository(SmsRepository):
 
     def get_sms_by_id(self, sms_id):
         try:
-            resp = self.table.get_item(Key={'messageId': sms_id})
-            if 'Item' in resp:
-                phone_number = resp['Item']['msisdn']
+            scan_data = self.table.scan(FilterExpression=Key('messageId').eq(sms_id))
+            if int(scan_data['Count']) > 0:
+                sms = scan_data['Items'][0]
+                phone_number = sms['msisdn']
                 phone_repo = AWSPhonesRepository()
                 phone = phone_repo.get_name_by_phone(phone_number)
-                return resp['Item'], phone
+                sms['phone'] = phone
+                return sms
         except ClientError as e:
             print(e.response['Error']['Message'])
 
-        return None, None
+        return None
 
-    def get_sms_by_sender(self, sender):
+    def get_sms_by_sender(self, sender, limit=None, offset=None):
         try:
             scan_data = self.table.scan(FilterExpression=Key('msisdn').eq(sender))
-            scan_data['Items'].sort(key=lambda x: x['ts'], reverse=True)
+            scan_data['Items'].reverse()
+
+            if offset and 0 <= offset < len(scan_data['Items']):
+                scan_data['Items'] = scan_data['Items'][offset:]
+
+            if limit and 0 <= limit < len(scan_data['Items']):
+                scan_data['Items'] = scan_data['Items'][:limit]
+
             phone_repo = AWSPhonesRepository()
             phone = phone_repo.get_name_by_phone(sender)
-            scan_data['Phone'] = phone
+            for item in scan_data['Items']:
+                item['phone'] = phone
+
+            return scan_data
+        except ClientError as e:
+            print(e.response['Error']['Message'])
+            return None
+
+    def get_sms(self, limit=None, offset=None):
+        try:
+            scan_data = self.table.scan()
+            scan_data['Items'].reverse()
+
+            if offset and 0 <= offset < len(scan_data['Items']):
+                scan_data['Items'] = scan_data['Items'][offset:]
+
+            if limit and 0 <= limit < len(scan_data['Items']):
+                scan_data['Items'] = scan_data['Items'][:limit]
+
+            phone_repo = AWSPhonesRepository()
+            for item in scan_data['Items']:
+                phone = phone_repo.get_name_by_phone(item['msisdn'])
+                item['phone'] = phone
+
             return scan_data
         except ClientError as e:
             print(e.response['Error']['Message'])

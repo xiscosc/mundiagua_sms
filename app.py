@@ -28,18 +28,37 @@ def get_phones():
     return jsonify(response)
 
 
+@app.route("/sms/all")
+@check_token
+def get_all_sms():
+    repository = SMSRepo()
+    limit = request.args.get('limit', type=int)
+    offset = request.args.get('offset', type=int)
+    scan_data = repository.get_sms(limit, offset)
+    if not scan_data:
+        return jsonify({'error': 'Error retrieving sms'}), 500
+
+    response = {
+        'count': scan_data['Count'],
+        'items': scan_data['Items'],
+    }
+
+    return jsonify(response)
+
+
 @app.route("/sms/sender/<string:msisdn>")
 @check_token
 def get_sms_by_sender(msisdn):
     repository = SMSRepo()
-    scan_data = repository.get_sms_by_sender(msisdn)
+    limit = request.args.get('limit', type=int)
+    offset = request.args.get('offset', type=int)
+    scan_data = repository.get_sms_by_sender(msisdn, limit, offset)
     if not scan_data:
         return jsonify({'error': 'Error filtering by sender'}), 500
 
     response = {
         'count': scan_data['Count'],
         'items': scan_data['Items'],
-        'phone': scan_data['Phone'],
     }
 
     return jsonify(response)
@@ -49,12 +68,11 @@ def get_sms_by_sender(msisdn):
 @check_token
 def get_sms(sms_id):
     repository = SMSRepo()
-    item, phone = repository.get_sms_by_id(sms_id)
+    item = repository.get_sms_by_id(sms_id)
     if not item:
         return jsonify({'error': 'SMS does not exist'}), 404
 
-    response = {'sms': item, 'phone': phone}
-    return jsonify(response)
+    return jsonify(item)
 
 
 @app.route("/sms", methods=["POST"])
