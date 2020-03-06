@@ -1,3 +1,4 @@
+org: xiscosc
 service: serverless-flask
 
 plugins:
@@ -9,7 +10,7 @@ custom:
   usersTableName: 'users-table-${self:provider.stage}'
   phonesTableName: 'phones-table-${self:provider.stage}'
   wsgi:
-    app: app.app
+    app: mundiagua-sms
     packRequirements: false
   pythonRequirements:
     dockerizePip: non-linux
