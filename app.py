@@ -1,3 +1,4 @@
+import requests
 from flask import Flask, jsonify, request
 from repositories import AWSSmsRepository as SMSRepo, AWSUserRepository as UserRepo, AWSPhonesRepository as PhoneRepo
 from decorators import check_token
@@ -87,6 +88,11 @@ def create_sms():
     result = repository.save_sms(json)
     if not result:
         return jsonify({'error': 'Error saving SMS'}), 500
+
+    try:
+        r = requests.get('https://in.mundiaguabalear.com/core/sms-gsm/notify')
+    except:
+        pass
 
     return jsonify({
         'messageId': message_id,
