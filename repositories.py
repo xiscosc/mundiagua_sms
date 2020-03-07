@@ -95,7 +95,7 @@ class AWSSmsRepository(SmsRepository):
     def get_sms_by_sender(self, sender, limit=None, offset=None):
         try:
             scan_data = self.table.scan(FilterExpression=Key('msisdn').eq(sender))
-            scan_data['Items'].reverse()
+            scan_data['Items'] = sorted(scan_data['Items'], key=lambda item: int(item['ts']), reverse=True)
 
             if offset and 0 <= offset < len(scan_data['Items']):
                 scan_data['Items'] = scan_data['Items'][offset:]
@@ -116,7 +116,7 @@ class AWSSmsRepository(SmsRepository):
     def get_sms(self, limit=None, offset=None):
         try:
             scan_data = self.table.scan()
-            scan_data['Items'].reverse()
+            scan_data['Items'] = sorted(scan_data['Items'], key=lambda item: int(item['ts']), reverse=True)
 
             if offset and 0 <= offset < len(scan_data['Items']):
                 scan_data['Items'] = scan_data['Items'][offset:]
