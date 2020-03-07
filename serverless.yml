@@ -32,6 +32,8 @@ provider:
         - dynamodb:DeleteItem
       Resource:
         - { "Fn::GetAtt": ["SMSDynamoDBTable", "Arn" ] }
+        - { "Fn::GetAtt": ["UsersDynamoDBTable", "Arn" ] }
+        - { "Fn::GetAtt": ["PhonesDynamoDBTable", "Arn" ] }
   environment:
     SMS_TABLE: ${self:custom.smsTableName}
     USERS_TABLE: ${self:custom.usersTableName}
