@@ -11,7 +11,7 @@
   "license": "ISC",
   "devDependencies": {
     "serverless-dynamodb-local": "^0.2.38",
-    "serverless-python-requirements": "^5.0.1",
+    "serverless-python-requirements": "^5.1.0",
     "serverless-wsgi": "^1.7.4"
   },
   "dependencies": {

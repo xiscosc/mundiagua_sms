@@ -17,7 +17,7 @@ custom:
 
 provider:
   name: aws
-  runtime: python3.7
+  runtime: python3.8
   stage: dev
   memorySize: 256
   region: eu-west-1
@@ -39,6 +39,7 @@ provider:
     USERS_TABLE: ${self:custom.usersTableName}
     PHONES_TABLE: ${self:custom.phonesTableName}
     TOKEN_ALIVE_H: 6
+    MESSAGES_SQS:
 
 functions:
   app:
